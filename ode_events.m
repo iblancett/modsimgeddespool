@@ -10,8 +10,8 @@ function [value, isterminal, direction] = ode_events(~, S)
     vy = S(4);
     
     dist_to_left_edge = x - ball_radius;
-    dist_to_right_edge = table_width - ball_radius;
-    dist_to_top_edge = table_length - ball_radius;
+    dist_to_right_edge = table_width - x - ball_radius;
+    dist_to_top_edge = table_length - y - ball_radius;
     dist_to_bottom_edge = y - ball_radius;
     
     value = [dist_to_left_edge, dist_to_right_edge, ...

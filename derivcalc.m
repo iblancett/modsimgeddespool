@@ -5,5 +5,5 @@ vx = S(3);
 vy = S(4);
 a = 0;
 
-res = [vx vy a a];
+res = [vx; vy; a; a];
 end
