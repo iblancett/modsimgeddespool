@@ -18,6 +18,6 @@ function [value, isterminal, direction] = ode_events(~, S)
         dist_to_top_edge, dist_to_bottom_edge, ...
         vx, vy];
     isterminal = [1 1 1 1 1 1];
-    direction = [0 0 0 0 0 0];
+    direction = [-1 -1 -1 -1 -1 -1];
     
 end

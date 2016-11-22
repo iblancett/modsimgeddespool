@@ -1,4 +1,4 @@
-% Plots the path of a pool 
+% Plots the path of a pool ball
 
 table_width = 1.17; % m
 table_length = 2.34; % m
@@ -29,10 +29,9 @@ while (bounces < 10)
     
     S = S(end,:);
     
-    if (vx == 0 && vy == 0) % ball stopped, stop simulation
+    if (vx < tolerance && vy < tolerance) % ball stopped, stop simulation
         break;
-    end
-    if (x - ball_radius < tolerance || table_width - ball_radius - x < tolerance) % hit left or right wall
+    elseif (x - ball_radius < tolerance || table_width - ball_radius - x < tolerance) % hit left or right wall
         S(3) = -vx;
         bounces = bounces + 1;
     elseif (y - ball_radius < tolerance || table_length - ball_radius - y < tolerance) % hit top or bottom wall
