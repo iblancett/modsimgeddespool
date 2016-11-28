@@ -20,25 +20,11 @@ while (bounces < 10)
     [t, S] = ode45(dRdt, timespan, S, options);
     T_master = [T_master; t];
     S_master = [S_master; S];
-    x = S(end,1);
-    y = S(end,2);
-    vx = S(end,3);
-    vy = S(end,4);
-    
-    tolerance = 1e-4;
-    
-    S = S(end,:);
-    
-    if (vx < tolerance && vy < tolerance) % ball stopped, stop simulation
-        break;
-    elseif (x - ball_radius < tolerance || table_width - ball_radius - x < tolerance) % hit left or right wall
-        S(3) = -vx;
-        bounces = bounces + 1;
-    elseif (y - ball_radius < tolerance || table_length - ball_radius - y < tolerance) % hit top or bottom wall
-        S(4) = -vy;
-        bounces = bounces + 1;
+    S = calculate_vectors_after_collision(S);
+    if (S == false)
+        break; % The balls stopped rolling
     end
-    
+    bounces = bounces + 1;
 end
 
 comet(S_master(:,1), S_master(:,2));
