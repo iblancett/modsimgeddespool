@@ -12,13 +12,13 @@ end
 for j = 1:numballs
 % Force of drag
 % Find:
-% C = coefficient of drag
+% c = coefficient of drag
 % rho = density of ball
-% A = cross-section area
+% a = cross-section area
 % m = mass of ball
 
-fx(j) = - 1/2 .* C(j) .* rho(j) .* A(j) .* vx(j) .* sqrt(vx(j).^2 + vy(j).^2);
-fy(j) = - 1/2 .* C(j) .* rho(j) .* A(j) .* vy(j) .* sqrt(vx(j).^2 + vy(j).^2);
+fx(j) = - 1/2 .* c .* rho(j) .* a(j) .* vx(j) .* sqrt(vx(j).^2 + vy(j).^2);
+fy(j) = - 1/2 .* c .* rho(j) .* a(j) .* vy(j) .* sqrt(vx(j).^2 + vy(j).^2);
 
 % Get acceleration
 ax(j) = fx(j) ./ m(j);
