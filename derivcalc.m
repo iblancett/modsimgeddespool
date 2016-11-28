@@ -1,4 +1,4 @@
-function res = derivcalc(t, S)
+function res = derivcalc(t, S, m, rho, a, c)
 
 numballs = length(S)/4;
 

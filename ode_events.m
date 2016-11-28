@@ -13,10 +13,10 @@ function [value, isterminal, direction] = ode_events(~, S)
     %% Organize old values    
     for i = 1:ball_count
         start_index = 4*(i-1)+1;
-        x(i) = S(end, start_index);
-        y(i) = S(end, start_index+1);
-        vx(i) = S(end, start_index+2);
-        vy(i) = S(end, start_index+3);
+        x(i) = S(start_index, end);
+        y(i) = S(start_index+1, end);
+        vx(i) = S(start_index+2, end);
+        vy(i) = S(start_index+3, end);
     end
     
     x = S(1);

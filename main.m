@@ -30,7 +30,7 @@ rho(1) = rho_cue;
 a = zeros(1, numballs);
 a(1) = a_cue;
 
-for i = numballs
+for i = 1:numballs
     m(i+1) = mass_eight;
     rho(i+1) = rho_eight;
     a(i+1) = a_eight;
@@ -52,7 +52,7 @@ while (bounces < 10)
     [t, S] = ode45(dRdt, timespan, S, options);
     T_master = [T_master; t];
     S_master = [S_master; S];
-    S = calculate_vectors_after_collision(S);
+    S = calculate_vectors_after_collision(S(end,:), radius_eight);
     if (S == false)
         break; % The balls stopped rolling
     end
