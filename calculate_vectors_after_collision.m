@@ -8,6 +8,7 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     table_width = 1.17; % m
     table_length = 2.34; % m
     tolerance = 1e-4; % Tolerance when checking for collisions
+    m = .165; % kg
     
     x = zeros(1,ball_count);
     y = zeros(1,ball_count);
@@ -37,33 +38,30 @@ function res = calculate_vectors_after_collision(S, ball_radius)
         if (x(i) - ball_radius < tolerance || table_width - ball_radius - x(i) < tolerance) % hit left or right wall
             vx(i) = -vx(i);
         elseif (y(i) - ball_radius < tolerance || table_length - ball_radius - y(i) < tolerance) % hit top or bottom wall
-            vy(i) = -vy(i);
+            vy(i) = -vy(i); 
         end
     end
-    %{
+    
     %% Check for collisions with other balls
+    P = [x' y'];
+    V = [vx' vy']; % new row for each ball
     for i = 1:ball_count
-        
-        for n = 1:ball_count
-            if (n == i)
-                continue; % Don't check for collision with itself
+        for j = 1:ball_count
+            if i>j && abs(x(i)-x(j)) < 2 * ball_radius + tolerance &&...
+                    abs(y(i)-y(j)) < 2 * ball_radius + tolerance
+                N = P(i,:) - P(j,:);
+                N = norm(N);
+                a1 = dot(V(i,:),N);
+                a2 = dot(V(j,:),N);
+                V(i,:) = V(i,:) - (2 .*(a1 - a2) ./ m .* N);
+                V(j,:) = V(j,:) - (2 .*(a1 - a2) ./ m .* N);
+                vx = V(:,1)';
+                vy = V(:,2)';
             end
-            
-            xi = x(i);
-            yi = y(i);
-            xn = x(n);
-            yn = y(n);
-            
-            % Calculate distance between balls
-            d = sqrt( (xi - xn)^2 + (yi - yn)^2 );
-            
-            if ((d - 2*ball_radius) < tolerance)
-                theta = atand( (yi-yn)/(xi-xn) );
-            end
-            
-        end
-    end
-    %}
+                
+                
+  
+    
     
     %% Pack result
     res = size(S);
