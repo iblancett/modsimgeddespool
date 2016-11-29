@@ -19,18 +19,26 @@ function [value, isterminal, direction] = ode_events(~, S)
         vy(i) = S(start_index+3, end);
     end
     
-    x = S(1);
-    y = S(2);
-    vx = S(3);
-    vy = S(4);
-    
     % Calculate proximity to edges
     dist_le = x - ball_radius;
     dist_re = table_width - x - ball_radius;
     dist_te = table_length - y - ball_radius;
     dist_be = y - ball_radius;
     
-    value = [dist_le dist_re dist_te dist_be vx vy];
+    % Calculate proximity of balls to each other
+    num_combinations = factorial(ball_count)/(2*factorial(ball_count - 2));
+    ball_dists = zeros(1, num_combinations);
+    for i = 1:ball_count-1
+        for j = 2:ball_count
+            if (i < j)
+                index = (i-1)*(ball_count-1)+1;
+                ball_dists(index) = sqrt((x(i)-x(j))^2 + (y(i)-y(j))^2) ...
+                                    - 2 * ball_radius;
+            end
+        end
+    end
+    
+    value = [dist_le dist_re dist_te dist_be vx vy ball_dists];
     isterminal = ones(size(value));
     direction = -1*ones(size(value));
     

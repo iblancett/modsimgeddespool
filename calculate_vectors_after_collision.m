@@ -25,12 +25,9 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     end
     
     %% Check if all balls have stopped
-    for i = 1:ball_count
-        if (abs(vx(i)) > tolerance && abs(vy(i)) > tolerance)
-            break; % At least one ball is still moving
-        end
+    if (max([vx vy]) < tolerance)
         res = false;
-        return
+        return;
     end
     
     %% Check for collisions with wall
@@ -44,9 +41,9 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     
     %% Check for collisions with other balls
     P = [x' y'];
-    V = [vx' vy']; % new row for each ball
+    V = [vx' vy']; % row for each ball
     for i = 1:ball_count
-        for j = 1:ball_count
+        for j = 2:ball_count
             if i>j && abs(x(i)-x(j)) < 2 * ball_radius + tolerance &&...
                     abs(y(i)-y(j)) < 2 * ball_radius + tolerance
                 N = P(i,:) - P(j,:);
@@ -58,8 +55,8 @@ function res = calculate_vectors_after_collision(S, ball_radius)
                 vx = V(:,1)';
                 vy = V(:,2)';
             end
-                
-                
+        end    
+    end     
   
     
     

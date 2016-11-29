@@ -1,4 +1,4 @@
-function res = derivcalc(t, S, m, rho, a, c)
+function res = derivcalc(~, S, m, rho, a, c)
 
 numballs = length(S)/4;
 
@@ -22,7 +22,7 @@ fy(j) = - 1/2 .* c .* rho(j) .* a(j) .* vy(j) .* sqrt(vx(j).^2 + vy(j).^2);
 
 % Get acceleration
 ax(j) = fx(j) ./ m(j);
-ay(j) = fx(j) ./ m(j);
+ay(j) = fy(j) ./ m(j);
 end
 
 T = zeros(length(S),1);

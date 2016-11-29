@@ -31,9 +31,9 @@ a = zeros(1, numballs);
 a(1) = a_cue;
 
 for i = 1:numballs
-    m(i+1) = mass_eight;
-    rho(i+1) = rho_eight;
-    a(i+1) = a_eight;
+m(i+1) = mass_eight;
+rho(i+1) = rho_eight;
+a(i+1) = a_eight;
 end
 
 dRdt = @(ti, Pi) derivcalc(ti, Pi, m, rho, a, c);
@@ -44,11 +44,15 @@ T_master = [];
 S_master = [];
 
 % Start ball in the middle with an initial velocity of 1 m/s
-S = [table_width/2, table_length/2, 1, 1];
-
+S = [table_width/2, table_length/2, 0.2, 1, ...
+table_width/2, table_length/2 + 0.5, 0, 0];
+    
+figure(1); clf; hold on;
+axis([0 table_width 0 table_length ]);
+plot(S(5), S(6), 'ko');
 bounces = 0;
 
-while (bounces < 10)
+while (bounces < 1000)
     [t, S] = ode45(dRdt, timespan, S, options);
     T_master = [T_master; t];
     S_master = [S_master; S];
@@ -58,5 +62,5 @@ while (bounces < 10)
     end
     bounces = bounces + 1;
 end
-
 comet(S_master(:,1), S_master(:,2));
+%p1 := 
