@@ -29,16 +29,20 @@ rho = zeros(1, numballs);
 rho(1) = rho_cue;
 a = zeros(1, numballs);
 a(1) = a_cue;
+global r
+r = zeros(1, numballs);
+r(1) = radius_cue;
 
 for i = 1:numballs
 m(i+1) = mass_eight;
 rho(i+1) = rho_eight;
 a(i+1) = a_eight;
+r(i+1) = radius_eight;
 end
 
 dRdt = @(ti, Pi) derivcalc(ti, Pi, m, rho, a, c);
 options = odeset('Events', @ode_events);
-timespan = [0 2000]; % time to run simulation (s)
+timespan = 0:.02:100; % time to run simulation (s)
 
 T_master = [];
 S_master = [];
@@ -54,13 +58,15 @@ bounces = 0;
 
 while (bounces < 1000)
     [t, S] = ode45(dRdt, timespan, S, options);
+    timespan = t(end)+.02:.02:100;
     T_master = [T_master; t];
     S_master = [S_master; S];
-    S = calculate_vectors_after_collision(S(end,:), radius_eight);
+    S = calculate_vectors_after_collision(S(end,:), r);
     if (S == false)
         break; % The balls stopped rolling
     end
     bounces = bounces + 1;
 end
+
 comet(S_master(:,1), S_master(:,2));
 %p1 := 

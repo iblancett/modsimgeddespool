@@ -2,7 +2,7 @@ function [value, isterminal, direction] = ode_events(~, S)
     
     table_width = 1.17; % m
     table_length = 2.34; % m
-    ball_radius = 0.03; % m
+    ball_radius = .05; % m
     ball_count = length(S)/4;
     
     x = zeros(1,ball_count);

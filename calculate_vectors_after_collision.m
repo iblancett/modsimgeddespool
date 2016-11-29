@@ -1,4 +1,4 @@
-function res = calculate_vectors_after_collision(S, ball_radius)
+function res = calculate_vectors_after_collision(S, r)
     % Calculates the new position and velocity vectors after a collision
     % or the balls have stopped rolling. Returns an updated version of the
     % same vector as was passed in or 'false' if all the balls have stopped
@@ -32,9 +32,9 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     
     %% Check for collisions with wall
     for i = 1:ball_count
-        if (x(i) - ball_radius < tolerance || table_width - ball_radius - x(i) < tolerance) % hit left or right wall
+        if (x(i) - r(i) < tolerance || table_width - r(i) - x(i) < tolerance) % hit left or right wall
             vx(i) = -vx(i);
-        elseif (y(i) - ball_radius < tolerance || table_length - ball_radius - y(i) < tolerance) % hit top or bottom wall
+        elseif (y(i) - r(i) < tolerance || table_length - r(i) - y(i) < tolerance) % hit top or bottom wall
             vy(i) = -vy(i); 
         end
     end
@@ -42,17 +42,23 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     %% Check for collisions with other balls
     P = [x' y'];
     V = [vx' vy']; % row for each ball
-    for i = 1:ball_count
-        for j = 2:ball_count
-            if i>j && abs(x(i)-x(j)) < 2 * ball_radius + tolerance &&...
-                    abs(y(i)-y(j)) < 2 * ball_radius + tolerance
-                N = P(i,:) - P(j,:);
-                N = norm(N);
-                a1 = dot(V(i,:),N);
-                a2 = dot(V(j,:),N);
-                V(i,:) = V(i,:) - (2 .*(a1 - a2) ./ m .* N);
+    for i = 2:ball_count
+        for j = 1:ball_count
+            if i>j && abs(x(i)-x(j)) < r(i) + r(j) + tolerance &&...
+                    abs(y(i)-y(j)) < r(i) + r(j) + tolerance
+                
+                % Compares each pair of balls only once & checks that balls
+                % are not being compared to themselves
+                % Checks if current pair of balls are in proximity of each
+                % other to be colliding
+             
+                N = P(i,:) - P(j,:); % subtract coordinates of balls
+                N = norm(N); % normalizes N
+                a1 = dot(V(i,:),N); % finds the velocity vector toward the other ball
+                a2 = dot(V(j,:),N); 
+                V(i,:) = V(i,:) - (2 .*(a1 - a2) ./ m .* N); % computes new velocity
                 V(j,:) = V(j,:) - (2 .*(a1 - a2) ./ m .* N);
-                vx = V(:,1)';
+                vx = V(:,1)'; % transposes input into vector
                 vy = V(:,2)';
             end
         end    
