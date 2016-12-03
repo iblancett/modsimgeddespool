@@ -38,29 +38,33 @@ end
 
 dRdt = @(ti, Pi) derivcalc(ti, Pi, m, rho, a, c);
 options = odeset('Events', @ode_events);
-timespan = [0 2000]; % time to run simulation (s)
+startTime = 0; % seconds
+endTime = 30; % seconds
+timestep = 0.1; % seconds
 
 T_master = [];
 S_master = [];
 
 % Start ball in the middle with an initial velocity of 1 m/s
-S = [table_width/2, table_length/2, 0.2, 1, ...
-table_width/2, table_length/2 + 0.5, 0, 0];
-    
-figure(1); clf; hold on;
-axis([0 table_width 0 table_length ]);
-plot(S(5), S(6), 'ko');
+S = [table_width/2+0.25, table_length/2, 0.1, 1, ...
+table_width/2+0.25, table_length/2 + 0.5, 0, 0];
+
 bounces = 0;
 
-while (bounces < 1000)
+while (bounces < 40 && startTime < endTime)
+    timespan = startTime:timestep:endTime;
     [t, S] = ode45(dRdt, timespan, S, options);
     T_master = [T_master; t];
     S_master = [S_master; S];
+    startTime = t(end) + timestep;
+    S = S(end,:);
     S = calculate_vectors_after_collision(S(end,:), radius_eight);
     if (S == false)
         break; % The balls stopped rolling
     end
     bounces = bounces + 1;
 end
-comet(S_master(:,1), S_master(:,2));
-%p1 := 
+% comet(S_master(:,1), S_master(:,2));
+table_dims = [0 0 table_width table_length];
+axes = [0 table_length 0 table_length];
+animate_results(T_master, S_master, axes, radius_cue, table_dims);
