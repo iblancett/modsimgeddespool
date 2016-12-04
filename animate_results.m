@@ -22,7 +22,7 @@ function res = animate_results(Time, S, axes, radius, dims)
             draw_circle(X(i,1), Y(i,1), radius);
             draw_circle(X(i,2), Y(i,2), radius);
 %         end
-        pause(dt*4);
+        pause(dt);
     end
     
     function draw_circle(x,y,r)
@@ -30,7 +30,7 @@ function res = animate_results(Time, S, axes, radius, dims)
         %r is the radius of the circle
         %0.01 is the angle step, bigger values will draw the circle faster but
         %you might notice imperfections (not very smooth)
-        ang=0:0.01:2*pi; 
+        ang=0:0.05:2*pi; 
         xp=r*cos(ang);
         yp=r*sin(ang);
         plot(x+xp,y+yp);

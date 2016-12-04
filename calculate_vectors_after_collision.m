@@ -15,7 +15,7 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     vx = zeros(1,ball_count);
     vy = zeros(1,ball_count);
     
-    %% Organize old values    
+    %% Unpack old values    
     for i = 1:ball_count
         start_index = 4*(i-1)+1;
         x(i) = S(end, start_index);
@@ -43,8 +43,8 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     P = [x' y'];
     V = [vx' vy']; % row for each ball
     for i = 1:ball_count
-        for j = 2:ball_count
-            if i<j && abs(x(i)-x(j)) < 2 * ball_radius + tolerance &&...
+        for j = i+1:ball_count
+            if abs(x(i)-x(j)) < 2 * ball_radius + tolerance &&...
                     abs(y(i)-y(j)) < 2 * ball_radius + tolerance
                 K_i = 0.5*m*((vx(1)+vy(1)).^2 + vx(2)+vy(2).^2);
                 P_i = m*(V(i,:)+V(2,:));
@@ -56,8 +56,8 @@ function res = calculate_vectors_after_collision(S, ball_radius)
                 a1 = dot(V(i,:),N);
                 a2 = dot(V(j,:),N);
                 optimizedP = (a1 - a2) / m;
-                V(i,:) = V(i,:) - optimizedP .* N * m;
-                V(j,:) = V(j,:) + optimizedP .* N * m;
+                V(i,:) = V(i,:) + optimizedP .* N * m;
+                V(j,:) = V(j,:) - optimizedP .* N * m;
                 vx = V(:,1)';
                 vy = V(:,2)';
                 K_f = 0.5*m*((vx(1)+vy(1)).^2 + vx(2)+vy(2).^2);

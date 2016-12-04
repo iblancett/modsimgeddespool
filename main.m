@@ -10,6 +10,7 @@ ball_radius = 0.03; % m
 mass_cue = .17; % kg
 mass_eight = .16; % kg
 radius_cue = .055; % m
+global radius_eight
 radius_eight = .05; % m
 
 % calculations
@@ -46,12 +47,26 @@ T_master = [];
 S_master = [];
 
 % Start ball in the middle with an initial velocity of 1 m/s
-S = [table_width/2+0.25, table_length/2, 0.1, 1, ...
-table_width/2+0.25, table_length/2 + 0.5, 0, 0];
+S = [1, table_length/2, 0, 1, ...
+1.05, table_length/2 + 0.5, 0, 0];
 
 bounces = 0;
+ball_count = length(S)/4;
+global ball_dist_event_dirs
 
-while (bounces < 40 && startTime < endTime)
+while (bounces < 20 && startTime < endTime)
+    x = zeros(1,ball_count);
+    y = zeros(1,ball_count);
+    for i = 1:ball_count
+        start_index = 4*(i-1)+1;
+        x(i) = S(end, start_index);
+        y(i) = S(end, start_index+1);
+    end
+
+    ball_dist_event_dirs = zeros(1,factorial(ball_count)/(2*factorial(ball_count - 2)));
+    ball_dists = calc_ball_proximity(x, y, ball_count, radius_eight, ball_dist_event_dirs);
+    ball_dist_event_dirs = -ball_dists./abs(ball_dists);
+
     timespan = startTime:timestep:endTime;
     [t, S] = ode45(dRdt, timespan, S, options);
     T_master = [T_master; t];
@@ -65,6 +80,7 @@ while (bounces < 40 && startTime < endTime)
     bounces = bounces + 1;
 end
 % comet(S_master(:,1), S_master(:,2));
+
 table_dims = [0 0 table_width table_length];
 axes = [0 table_length 0 table_length];
 animate_results(T_master, S_master, axes, radius_cue, table_dims);
