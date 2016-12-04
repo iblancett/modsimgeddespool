@@ -2,7 +2,7 @@ function [value, isterminal, direction] = ode_events(~, S)
     
     table_width = 1.17; % m
     table_length = 2.34; % m
-    global radius_eight
+    global radii ball_dist_event_dirs
     ball_count = length(S)/4;
     
     x = zeros(1,ball_count);
@@ -10,7 +10,7 @@ function [value, isterminal, direction] = ode_events(~, S)
     vx = zeros(1,ball_count);
     vy = zeros(1,ball_count);
     
-    %% Organize old values    
+    % Unpack old values
     for i = 1:ball_count
         start_index = 4*(i-1)+1;
         x(i) = S(start_index, end);
@@ -19,16 +19,14 @@ function [value, isterminal, direction] = ode_events(~, S)
         vy(i) = S(start_index+3, end);
     end
     
-    global ball_dist_event_dirs
-    ball_dists = calc_ball_proximity(x, y, ball_count, radius_eight, ball_dist_event_dirs);
+    ball_dists = calc_ball_proximity(x, y, ball_count, radii, ball_dist_event_dirs);
     
     % Calculate proximity to edges
-    dist_le = x - radius_eight;
-    dist_re = table_width - x - radius_eight;
-    dist_te = table_length - y - radius_eight;
-    dist_be = y - radius_eight;
+    dist_le = x - radii;
+    dist_re = table_width - x - radii;
+    dist_te = table_length - y - radii;
+    dist_be = y - radii;
     
-    global ball_dist_event_dirs
     ball_combins = length(ball_dists);
     
     value = [dist_le dist_re dist_te dist_be vx vy ball_dists];

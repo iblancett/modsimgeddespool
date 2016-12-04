@@ -1,27 +1,31 @@
-function res = animate_results(Time, S, axes, radius, dims)
+function res = animate_results(Time, S, axes, radii, dims, K_tot)
     
     % Unpack positions
     ball_count = size(S,2)/4;
     X = zeros(size(S,1), ball_count);
     Y = zeros(size(S,1), ball_count);
-    for i = 1:ball_count
-        X(:,i) = S(:,4*i-3);
-        Y(:,i) = S(:,4*i-2);
+    for t = 1:ball_count
+        X(:,t) = S(:,4*t-3);
+        Y(:,t) = S(:,4*t-2);
     end
-    
-%     ball_colors = {'ko', 'go'};
-    
+    maxE = max(K_tot)*1.1;
     dt = Time(2) - Time(1);
-    for i = 1:length(Time)
+    
+    for t = 1:length(Time)
+        figure(1);
         clf; hold on;
         axis(axes);
         axis square
         rectangle('Position', dims);
-%         for b = 1:ball_count
-%             c = ball_colors(b);
-            draw_circle(X(i,1), Y(i,1), radius);
-            draw_circle(X(i,2), Y(i,2), radius);
-%         end
+        for b = 1:ball_count
+            draw_circle(X(t,b), Y(t,b), radii(b));
+        end
+        figure(2); clf; hold on;
+        
+        plot(Time, K_tot);
+        %plot(Time, P_tot);
+        plot([Time(t) Time(t)], [0 maxE]);
+        %legend('Kinetic energy', 'Momentum');
         pause(dt);
     end
     

@@ -1,4 +1,4 @@
-function res = calculate_vectors_after_collision(S, ball_radius)
+function res = calculate_vectors_after_collision(S, radii, m)
     % Calculates the new position and velocity vectors after a collision
     % or the balls have stopped rolling. Returns an updated version of the
     % same vector as was passed in or 'false' if all the balls have stopped
@@ -8,7 +8,6 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     table_width = 1.17; % m
     table_length = 2.34; % m
     tolerance = 1e-4; % Tolerance when checking for collisions
-    m = .165; % kg
     
     x = zeros(1,ball_count);
     y = zeros(1,ball_count);
@@ -32,9 +31,10 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     
     %% Check for collisions with wall
     for i = 1:ball_count
-        if (x(i) - ball_radius < tolerance || table_width - ball_radius - x(i) < tolerance) % hit left or right wall
+        radius = radii(i);
+        if (x(i) - radius < tolerance || table_width - radius - x(i) < tolerance) % hit left or right wall
             vx(i) = -vx(i);
-        elseif (y(i) - ball_radius < tolerance || table_length - ball_radius - y(i) < tolerance) % hit top or bottom wall
+        elseif (y(i) - radius < tolerance || table_length - radius - y(i) < tolerance) % hit top or bottom wall
             vy(i) = -vy(i); 
         end
     end
@@ -44,10 +44,11 @@ function res = calculate_vectors_after_collision(S, ball_radius)
     V = [vx' vy']; % row for each ball
     for i = 1:ball_count
         for j = i+1:ball_count
-            if abs(x(i)-x(j)) < 2 * ball_radius + tolerance &&...
-                    abs(y(i)-y(j)) < 2 * ball_radius + tolerance
-                K_i = 0.5*m*((vx(1)+vy(1)).^2 + vx(2)+vy(2).^2);
-                P_i = m*(V(i,:)+V(2,:));
+            dist_btwn_centers = radii(i) + radii(j);
+            if abs(x(i)-x(j)) < dist_btwn_centers + tolerance &&...
+                    abs(y(i)-y(j)) < dist_btwn_centers + tolerance
+                K_i = 0.5*m*(V(:,1).^2+V(:,2).^2);
+                P_i = m*(V(:,1).^2+V(:,2).^2);
                 N = P(i,:) - P(j,:);
                 magdP = norm(N);
                 N = N./magdP;
@@ -55,13 +56,16 @@ function res = calculate_vectors_after_collision(S, ball_radius)
                 % vectors along N
                 a1 = dot(V(i,:),N);
                 a2 = dot(V(j,:),N);
-                optimizedP = (a1 - a2) / m;
-                V(i,:) = V(i,:) + optimizedP .* N * m;
-                V(j,:) = V(j,:) - optimizedP .* N * m;
+                optimizedP = (a1 - a2) * length(m) / sum(m);
+                V(i,:) = V(i,:) - optimizedP .* N * m(i);
+                V(j,:) = V(j,:) + optimizedP .* N * m(j);
                 vx = V(:,1)';
                 vy = V(:,2)';
-                K_f = 0.5*m*((vx(1)+vy(1)).^2 + vx(2)+vy(2).^2);
-                P_f = m*(V(i,:)+V(2,:));
+                K_f = 0.5*m*(V(:,1).^2+V(:,2).^2);
+                P_f = m*(V(:,1).^2+V(:,2).^2);
+                if (K_f > K_i)
+                    pause(0.001); % Just a place to put a breakpoint for debugging
+                end
             end
         end
     end
