@@ -18,7 +18,13 @@ function res = animate_results(Time, S, axes, radii, dims, K_tot)
         axis square
         rectangle('Position', dims);
         for b = 1:ball_count
-            draw_circle(X(t,b), Y(t,b), radii(b));
+            x = X(t,b);
+            y = Y(t,b);
+            radius = radii(b);
+            if (x == dims(1) || x == dims(3) || y == dims(2) || y == dims(4))
+                radius = radius/2;
+            end
+            draw_circle(x, y, radius);
         end
         figure(2); clf; hold on;
         

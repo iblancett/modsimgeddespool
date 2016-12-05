@@ -20,9 +20,10 @@ a_eight = pi * radius_regular^2; % m^2
 c = .015; % unitless - range of 0.005 - 0.015
 
 % Define initial ball positions and velocities
-S = [table_width/2, table_length/2, 0, 1, ...
-table_width/2+0.05, table_length/2 + 0.5, 0, 0];%, ...
-%table_width/2+0.01, table_length/2 - 0.5, 0, 0];
+S = [table_width/2, table_length/2-0.5, 0, 1, ...
+table_width/2+0.01, table_length/2+0.14, 0, 0, ...
+table_width/2-0.05, table_length/2+0.25, 0, 0, ...
+table_width/2+0.2, table_length/2, 0, 0];
 
 % create vectors of ball properties for flow function
 ball_count = length(S)/4;
@@ -64,8 +65,9 @@ while (bounces < 40 && startTime < endTime-timestep)
     T_master = [T_master; t];
     S_master = [S_master; S];
     startTime = t(end) + timestep;
-    S = calculate_vectors_after_collision(S(end,:), radii, m);
-    if (S == false)
+    [S, balls_stopped] = calculate_vectors_after_collision(S(end,:), radii, m);
+    if (balls_stopped)
+        S_master(end, :) = S(1,:);
         break; % The balls stopped rolling
     end
     bounces = bounces + 1;

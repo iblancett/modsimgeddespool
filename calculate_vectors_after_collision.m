@@ -1,4 +1,4 @@
-function res = calculate_vectors_after_collision(S, radii, m)
+function [resS, balls_stopped] = calculate_vectors_after_collision(S, radii, m)
     % Calculates the new position and velocity vectors after a collision
     % or the balls have stopped rolling. Returns an updated version of the
     % same vector as was passed in or 'false' if all the balls have stopped
@@ -7,12 +7,15 @@ function res = calculate_vectors_after_collision(S, radii, m)
     ball_count = length(S)/4;
     table_width = 1.17; % m
     table_length = 2.34; % m
+    pocket_radius = 0.15; % m
     tolerance = 1e-4; % Tolerance when checking for collisions
     
     x = zeros(1,ball_count);
     y = zeros(1,ball_count);
     vx = zeros(1,ball_count);
     vy = zeros(1,ball_count);
+    table_center_horz = table_width/2;
+    table_center_vert = table_length/2;
     
     %% Unpack old values    
     for i = 1:ball_count
@@ -23,19 +26,42 @@ function res = calculate_vectors_after_collision(S, radii, m)
         vy(i) = S(end, start_index+3);
     end
     
-    %% Check if all balls have stopped
-    if (max(abs([vx vy])) < tolerance)
-        res = false;
-        return;
-    end
-    
-    %% Check for collisions with wall
+    %% Check for collisions with wall and for sinking into a pocket
     for i = 1:ball_count
         radius = radii(i);
         if (x(i) - radius < tolerance || table_width - radius - x(i) < tolerance) % hit left or right wall
-            vx(i) = -vx(i);
-        elseif (y(i) - radius < tolerance || table_length - radius - y(i) < tolerance) % hit top or bottom wall
-            vy(i) = -vy(i); 
+            %% Hit left or right wall
+            % Check for falling into a pocket
+            % Check for falling into center pocket along vertical walls
+            if (abs(y(i) - table_center_vert) + radius < pocket_radius)
+                if (x(i) > table_center_horz)
+                    x(i) = table_width; % Fell into right center pocket
+                else
+                    x(i) = 0; % Fell into left center pocket
+                end
+                y(i) = table_center_vert;
+                vx(i) = 0; vy(i) = 0;
+                radii(i) = radii(i)/2; % Just for visual cue
+            % Check for falling into a corner pocket
+            elseif (abs(y(i)) - radius > table_length - pocket_radius)
+                [x(i), y(i)] = get_sunk_ball_pos(x(i), y(i));
+                vx(i) = 0; vy(i) = 0;
+                radii(i) = radii(i)/2; % Just for visual cue
+            else
+                %% Didn't fall in, just bouncing off wall
+                vx(i) = -vx(i);
+            end
+        elseif (y(i) - radius < tolerance || table_length - radius - y(i) < tolerance)
+            %% Hit top or bottom wall
+            % Check for falling into a corner pocket
+            if (abs(x(i)) - radius > table_length - pocket_radius)
+                [x(i), y(i)] = get_sunk_ball_pos(x(i), y(i));
+                vx(i) = 0; vy(i) = 0;
+                radii(i) = radii(i)/2; % Just for visual cue
+            else
+                %% Didn't fall in, just bouncing off wall
+                vy(i) = -vy(i);
+            end
         end
     end
     
@@ -73,13 +99,32 @@ function res = calculate_vectors_after_collision(S, radii, m)
     
     
     %% Pack result
-    res = size(S);
+    resS = size(S);
     for i = 1:ball_count
         start_index = 4*(i-1)+1;
-        res(start_index) = x(i);
-        res(start_index+1) = y(i);
-        res(start_index+2) = vx(i);
-        res(start_index+3) = vy(i);
+        resS(start_index) = x(i);
+        resS(start_index+1) = y(i);
+        resS(start_index+2) = vx(i);
+        resS(start_index+3) = vy(i);
     end
     
+    %% Check if all balls have stopped
+    if (max(abs([vx vy])) < tolerance)
+        balls_stopped = true;
+    else
+        balls_stopped = false;
+    end
+    
+    function [x, y] = get_sunk_ball_pos(x, y)
+        if (x > table_center_horz)
+            x = table_width; % Fell into right center pocket
+        else
+            x = 0; % Fell into left center pocket
+        end
+        if (y > table_center_vert)
+            y = table_length;
+        else
+            y = 0;
+        end
+    end
 end
