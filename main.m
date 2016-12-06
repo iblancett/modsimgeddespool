@@ -22,10 +22,10 @@ c = 0.35; % unitless - range of 0.005 - 0.015
 
 % Define initial ball positions. Cue velocity set later.
 S_init = [table_width/4-radius_regular, table_length/3,                 0, 0, ... % cue
-    table_width/4-radius_regular,   table_length/2-3*radius_regular,    0, 0, ... % 8 ball
-    table_width/8,                  table_length/2-4*radius_regular,    0, 0, ... % red
-    table_width/4-3*radius_regular, table_length/2+3*radius_regular,  0, 0, ... % orange
-    table_width/4-3*radius_regular+sqrt(2)*radius_regular, table_length/2+3*radius_regular+sqrt(2)*radius_regular,      0, 0]; % purple
+    table_width/4-radius_regular,   table_length/2-3*radius_regular,    0, 0];%, ... % 8 ball
+%     table_width/8,                  table_length/2-4*radius_regular,    0, 0];%, ... % red
+%     table_width/4-3*radius_regular, table_length/2+3*radius_regular,  0, 0, ... % orange
+%     table_width/4-3*radius_regular+sqrt(2)*radius_regular, table_length/2+3*radius_regular+sqrt(2)*radius_regular,      0, 0]; % purple
 
 % create vectors of ball properties for flow function
 ball_count = length(S_init)/4;
@@ -37,32 +37,32 @@ radii = [radius_cue radius_regular*ones(1,ball_count-1)];
 
 %% Simulation parameters
 
-theta_step = pi/24;
-max_speed = 2; % maximum speed John Geddes can get the cue ball moving
-sim_init_thetas = 1:theta_step:2*pi;
-sim_init_speed = 2;%:1:max_speed;
+theta_step = pi/500;
+max_speed = 10; % maximum speed John Geddes can get the cue ball moving
+sim_init_thetas = pi/4:theta_step:2*pi;
+sim_init_speeds = 10:1:max_speed;
 
 %% Run the simulation
 
 dRdt = @(ti, Pi) derivcalc(ti, Pi, m, rho, A, c);
-options = odeset('Events', @ode_events);
+options = odeset('Events', @ode_events, 'RelTol', 1e-5);
 start_time = 0; % seconds
-end_time = 15; % seconds
+end_time = 25; % seconds
 timestep = 0.1; % seconds
 
-
-global ball_dist_event_dirs
+global ball_dist_event_dirs %event_count
 
 for t = 1:length(sim_init_thetas)
-    for s = 1:length(sim_init_speed)
+    for s = 1:length(sim_init_speeds)
 
         S = S_init;
-        T_master = [];
-        S_master = [];
+        T_accum = [];
+        S_accum = [];
+%         event_count = 0;
         
         % Set cue initial velocity
-        S(3) = sim_init_speed(s)*cos(sim_init_thetas(t));
-        S(4) = sim_init_speed(s)*sin(sim_init_thetas(t));
+        S(3) = sim_init_speeds(s)*cos(sim_init_thetas(t));
+        S(4) = sim_init_speeds(s)*sin(sim_init_thetas(t));
         
         result = 0;
         bounces = 0; % Maximum number of bounces to run for (runaway stop)
@@ -83,8 +83,8 @@ for t = 1:length(sim_init_thetas)
 
             timespan = resume_time:timestep:end_time;
             [T, S] = ode45(dRdt, timespan, S, options);
-            T_master = [T_master; T];
-            S_master = [S_master; S];
+            T_accum = [T_accum; T];
+            S_accum = [S_accum; S];
             resume_time = T(end) + timestep;
             [S, balls_stopped] = calculate_vectors_after_collision(S(end,:), radii, m, pocket_radius);
 
@@ -114,8 +114,11 @@ for t = 1:length(sim_init_thetas)
             if (x_dist_center(2) == table_width/2 ...
                     && y_dist_center(2) == table_length/2)
                 % Eight ball pocketed, check if other balls are as well
-                if (x_dist_center(3:ball_count) == table_width/2*ones(1,ball_count-2) ...
-                        && y_dist_center(3:ball_count) == table_lenth/2*ones(1,ball_count-2))
+                balls_in_pockets_x = x_dist_center(3:ball_count) == table_width/2*ones(1,ball_count-2);
+                balls_in_corner_pockets_y = y_dist_center(3:ball_count) == table_length/2*ones(1,ball_count-2);
+                balls_in_center_pockets_y = y_dist_center(3:ball_count) == 0;
+                balls_in_pockets_y = balls_in_corner_pockets_y + balls_in_center_pockets_y;
+                if (sum(balls_in_pockets_x) == ball_count-2 && sum(balls_in_corner_pockets_y) == ball_count-2)
                     % All other balls (aside from cue) pocketed already
                     result = 1;
                     break;
@@ -126,38 +129,63 @@ for t = 1:length(sim_init_thetas)
             end
             % Cue nor eight ball pocketed, check if balls are stopped
             if (balls_stopped)
-                S_master(end, :) = S(1,:);
+                S_accum(end, :) = S(1,:);
                 break; % The balls stopped rolling
             end
             % Continue simulation
             bounces = bounces + 1;
         end
+        
+        % Calculate total kinetic energy throughout simulation
+        rows = size(S_accum,1);
+        K_tot = zeros(rows, 1);
+        speed = zeros(size(S_accum,1), ball_count);
+        for i = 1:ball_count
+            start_index = 4*(i-1)+3;
+            vx = S_accum(:, start_index);
+            vy = S_accum(:, start_index+1);
+            K_tot = K_tot + 0.5*m(i)*(vx.^2 + vy.^2);
+            speed(:,i) = sqrt(vx.^2 + vy.^2);
+        end
+
         sim(t,s).init_theta = sim_init_thetas(t);
-        sim(t,s).init_speed = sim_init_speed(s);
+        sim(t,s).init_speed = sim_init_speeds(s);
         sim(t,s).result = result;
-        sim(t,s).T = T_master;
-        sim(t,s).S = S_master;
+        sim(t,s).T = T_accum;
+        sim(t,s).S = S_accum;
         sim(t,s).bounces = bounces;
-
-    %% Display results
-
-    % Calculate total kinetic energy throughout simulation
-    rows = size(S_master,1);
-    K_tot = zeros(rows, 1);
-    speed = zeros(size(S_master,1), ball_count);
-    for i = 1:ball_count
-        start_index = 4*(i-1)+3;
-        vx = S_master(:, start_index);
-        vy = S_master(:, start_index+1);
-        K_tot = K_tot + 0.5*m(i)*(vx.^2 + vy.^2);
-        speed(:,i) = sqrt(vx.^2 + vy.^2);
+        sim(t,s).speed = speed;
+        sim(t,s).K_tot = K_tot;
     end
+    theta_deg = sim_init_thetas(t)/pi*180;
+    fprintf('Finished simulating theta=%.2f°\n', theta_deg);
+end
 
-    table_dims = [0 0 table_width table_length];
-    axes = [-pocket_radius table_length+pocket_radius -pocket_radius ...
-        table_length+pocket_radius];
-    figure(1); clf;
-    animate_results(T_master, S_master, axes, radii, table_dims, K_tot, ...
-        speed, pocket_radius, sim_init_thetas(t), sim_init_speed(s));
+%% Find successful shot with most bounces
+good_shots = [];
+max_bounces = 0;
+best_shot_index = [0 0];
+for t = 1:length(sim_init_thetas)
+    for s = 1:length(sim_init_speeds)
+        if (sim(t,s).result == 1)
+            good_shots = [good_shots sim(t,s)];
+            if (sim(t,s).bounces > max_bounces)
+                max_bounces = sim(t,s).bounces;
+                best_shot_index(:) = [t s];
+            end
+        end
     end
 end
+    %% Display results
+    if (sum(best_shot_index) > 1)
+        best_shot = sim(best_shot_index(1), best_shot_index(2));
+        table_dims = [0 0 table_width table_length];
+        axes = [-pocket_radius table_length+pocket_radius -pocket_radius ...
+            table_length+pocket_radius];
+        animate_results(best_shot.T, best_shot.S, axes, radii, ...
+            table_dims, best_shot.K_tot, best_shot.speed, pocket_radius, ...
+            sim_init_thetas(best_shot_index(1)), sim_init_speeds(best_shot_index(2)));
+    else
+        fprintf('No solutions found\n');
+    end
+% end

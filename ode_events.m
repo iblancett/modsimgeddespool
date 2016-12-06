@@ -63,8 +63,16 @@ function [value, isterminal, direction] = ode_events(~, S)
 %         reduced_vx = vx;
 %         reduced_vy = vy;
 %     end
+% global event_count
     value = [dist_le dist_re dist_te dist_be vx vy ball_dists_1d];
+% if (event_count == 0)
+%     event_count = length(value);
+% elseif (event_count ~= length(value))
+%     hello = 'trouble';
+% end
     isterminal = ones(size(value));
     direction = [-1*ones(1,length(value)-ball_combins) ball_dists_event_dirs_1d];
-    
+%     if (length([value isterminal direction]) ~= 3*length(value))
+%         hello = 'weird trouble';
+%     end
 end

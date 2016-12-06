@@ -41,7 +41,8 @@ function [resS, balls_stopped] = calculate_vectors_after_collision(S, radii, m, 
                 vx(i) = 0; vy(i) = 0;
                 radii(i) = radii(i)/2; % Just for visual cue
             % Check for falling into a corner pocket
-            elseif (abs(y(i) - table_center_vert) < pocket_radius)
+            elseif (abs(y(i) - table_center_vert) < pocket_radius ...
+                || abs(y(i) - table_center_vert) > table_center_vert - pocket_radius)
                 [x(i), y(i)] = get_sunk_ball_pos(x(i), y(i));
                 vx(i) = 0; vy(i) = 0;
                 radii(i) = radii(i)/2; % Just for visual cue
