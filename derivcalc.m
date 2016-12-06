@@ -1,6 +1,7 @@
-function res = derivcalc(~, S, m, rho, A, c)
+function res = derivcalc(T, S, m, rho, A, c)
 
 numballs = length(S)/4;
+speed_threshold = 0.03; % m/s (about 1 in/s)
 
 x = zeros(1,numballs);
 y = zeros(1,numballs);
@@ -11,6 +12,13 @@ for i = 1:numballs
     y(i) = S(i*4-2);
     vx(i) = S(i*4-1);
     vy(i) = S(i*4);
+    % Stop balls once they reach a certain threshold, otherwise
+    % they'll asymptotically approach 0 m/s
+    n = norm([vx(i) vy(i)]);
+    if (0 < n && n < speed_threshold)
+        vx(i) = 0;
+        vy(i) = 0;
+    end
 end
 
 % Force of drag
@@ -33,6 +41,9 @@ for k = 1:numballs
     T(k*4-2) = vy(k);
     T(k*4-1) = ax(k);
     T(k*4) = ay(k);
+    if (T(end) > 1.7 && k ~= 1 && (max(ax(2:numballs) > 0) || max(ay(2:numballs)) > 0))
+        temp = 5;
+    end
 end
 
 res = T;

@@ -1,4 +1,4 @@
-function [resS, balls_stopped] = calculate_vectors_after_collision(S, radii, m)
+function [resS, balls_stopped] = calculate_vectors_after_collision(S, radii, m, pocket_radius)
     % Calculates the new position and velocity vectors after a collision
     % or the balls have stopped rolling. Returns an updated version of the
     % same vector as was passed in or 'false' if all the balls have stopped
@@ -7,7 +7,6 @@ function [resS, balls_stopped] = calculate_vectors_after_collision(S, radii, m)
     ball_count = length(S)/4;
     table_width = 1.17; % m
     table_length = 2.34; % m
-    pocket_radius = 0.15; % m
     tolerance = 1e-4; % Tolerance when checking for collisions
     
     x = zeros(1,ball_count);
@@ -31,9 +30,8 @@ function [resS, balls_stopped] = calculate_vectors_after_collision(S, radii, m)
         radius = radii(i);
         if (x(i) - radius < tolerance || table_width - radius - x(i) < tolerance) % hit left or right wall
             %% Hit left or right wall
-            % Check for falling into a pocket
             % Check for falling into center pocket along vertical walls
-            if (abs(y(i) - table_center_vert) + radius < pocket_radius)
+            if (abs(y(i) - table_center_vert) < pocket_radius)
                 if (x(i) > table_center_horz)
                     x(i) = table_width; % Fell into right center pocket
                 else
@@ -43,24 +41,24 @@ function [resS, balls_stopped] = calculate_vectors_after_collision(S, radii, m)
                 vx(i) = 0; vy(i) = 0;
                 radii(i) = radii(i)/2; % Just for visual cue
             % Check for falling into a corner pocket
-            elseif (abs(y(i)) - radius > table_length - pocket_radius)
+            elseif (abs(y(i) - table_center_vert) < pocket_radius)
                 [x(i), y(i)] = get_sunk_ball_pos(x(i), y(i));
                 vx(i) = 0; vy(i) = 0;
                 radii(i) = radii(i)/2; % Just for visual cue
             else
                 %% Didn't fall in, just bouncing off wall
-                vx(i) = -vx(i);
+                vx(i) = -vx(i)/2; % 50% E lost in collision
             end
         elseif (y(i) - radius < tolerance || table_length - radius - y(i) < tolerance)
             %% Hit top or bottom wall
             % Check for falling into a corner pocket
-            if (abs(x(i)) - radius > table_length - pocket_radius)
+            if (abs(x(i) - table_center_horz) > table_center_horz - pocket_radius)
                 [x(i), y(i)] = get_sunk_ball_pos(x(i), y(i));
                 vx(i) = 0; vy(i) = 0;
                 radii(i) = radii(i)/2; % Just for visual cue
             else
                 %% Didn't fall in, just bouncing off wall
-                vy(i) = -vy(i);
+                vy(i) = -vy(i)/2; % 50% E lost in collision
             end
         end
     end
