@@ -18,7 +18,7 @@ rho_cue = mass_cue / volume_cue; % kg/m^3
 rho_eight = mass_regular / volume_eight; % kg/m^3
 a_cue = pi * radius_cue^2; % m^2
 a_eight = pi * radius_regular^2; % m^2
-c = 0.35; % unitless - range of 0.005 - 0.015
+c_roll = 0.015; % unitless - range of 0.005 - 0.015
 
 % Define initial ball positions. Cue velocity set later.
 S_init = [table_width/4-radius_regular, table_length/3,                 0, 0, ... % cue
@@ -37,20 +37,22 @@ radii = [radius_cue radius_regular*ones(1,ball_count-1)];
 
 %% Simulation parameters
 
-theta_step = pi/500;
-max_speed = 10; % maximum speed John Geddes can get the cue ball moving
-sim_init_thetas = pi/4:theta_step:2*pi;
-sim_init_speeds = 10:1:max_speed;
+theta_step = pi/100;
+max_speed = 13; % maximum speed John Geddes can get the cue ball moving (m/s)
+sim_init_thetas = 0:theta_step:2*pi;
+sim_init_speeds = 1:1:max_speed;
 
 %% Run the simulation
 
-dRdt = @(ti, Pi) derivcalc(ti, Pi, m, rho, A, c);
-options = odeset('Events', @ode_events, 'RelTol', 1e-5);
+dRdt = @(ti, Pi) derivcalc(ti, Pi, m, rho, A, c_roll);
+options = odeset('Events', @ode_events);
 start_time = 0; % seconds
 end_time = 25; % seconds
 timestep = 0.1; % seconds
 
 global ball_dist_event_dirs %event_count
+
+valid_shots = zeros(length(sim_init_thetas), length(sim_init_speeds));
 
 for t = 1:length(sim_init_thetas)
     for s = 1:length(sim_init_speeds)
@@ -105,8 +107,7 @@ for t = 1:length(sim_init_thetas)
             % Cue first
             x_dist_center = abs(x-table_width/2);
             y_dist_center = abs(y-table_length/2);
-            if (x_dist_center(1) == table_width/2 ...
-                    && y_dist_center(1) == table_length/2) % Scratched
+            if (x_dist_center(1) == table_width/2) % Scratched
                 result = 0;
                 break;
             end
@@ -151,11 +152,19 @@ for t = 1:length(sim_init_thetas)
         sim(t,s).init_theta = sim_init_thetas(t);
         sim(t,s).init_speed = sim_init_speeds(s);
         sim(t,s).result = result;
+        valid_shots(t,s) = result;
         sim(t,s).T = T_accum;
         sim(t,s).S = S_accum;
         sim(t,s).bounces = bounces;
         sim(t,s).speed = speed;
         sim(t,s).K_tot = K_tot;
+%         
+%         table_dims = [0 0 table_width table_length];
+%         axes = [-pocket_radius table_length+pocket_radius -pocket_radius ...
+%             table_length+pocket_radius];
+%         animate_results(T_accum, S_accum, axes, radii, ...
+%             table_dims, K_tot, speed, pocket_radius, ...
+%             sim_init_thetas(t), sim_init_speeds(s));
     end
     theta_deg = sim_init_thetas(t)/pi*180;
     fprintf('Finished simulating theta=%.2f°\n', theta_deg);
@@ -177,15 +186,24 @@ for t = 1:length(sim_init_thetas)
     end
 end
     %% Display results
-    if (sum(best_shot_index) > 1)
-        best_shot = sim(best_shot_index(1), best_shot_index(2));
-        table_dims = [0 0 table_width table_length];
-        axes = [-pocket_radius table_length+pocket_radius -pocket_radius ...
-            table_length+pocket_radius];
-        animate_results(best_shot.T, best_shot.S, axes, radii, ...
-            table_dims, best_shot.K_tot, best_shot.speed, pocket_radius, ...
-            sim_init_thetas(best_shot_index(1)), sim_init_speeds(best_shot_index(2)));
-    else
-        fprintf('No solutions found\n');
-    end
+%     figure(1);
+%     if (sum(best_shot_index) > 1)
+%         best_shot = sim(best_shot_index(1), best_shot_index(2));
+%         table_dims = [0 0 table_width table_length];
+%         axes = [-pocket_radius table_length+pocket_radius -pocket_radius ...
+%             table_length+pocket_radius];
+%         animate_results(best_shot.T, best_shot.S, axes, radii, ...
+%             table_dims, best_shot.K_tot, best_shot.speed, pocket_radius, ...
+%             sim_init_thetas(best_shot_index(1)), sim_init_speeds(best_shot_index(2)));
+%     else
+%         fprintf('No solutions found\n');
+%     end
+    
+    figure(2);
+    r = sim_init_speeds';
+    X = r*cos(sim_init_thetas);
+    Y = r*sin(sim_init_thetas);
+    pcolor(X, Y, valid_shots');
+    title('Does John Make the Shot?');
+    axis square;
 % end

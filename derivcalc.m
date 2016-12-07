@@ -1,7 +1,8 @@
-function res = derivcalc(T, S, m, rho, A, c)
+function res = derivcalc(~, S, m, rho, A, c_roll)
 
 numballs = length(S)/4;
 speed_threshold = 0.03; % m/s (about 1 in/s)
+a_grav = 9.8; % acceleration due to gravity (m/s^2)
 
 x = zeros(1,numballs);
 y = zeros(1,numballs);
@@ -14,11 +15,11 @@ for i = 1:numballs
     vy(i) = S(i*4);
     % Stop balls once they reach a certain threshold, otherwise
     % they'll asymptotically approach 0 m/s
-    n = norm([vx(i) vy(i)]);
-    if (0 < n && n < speed_threshold)
-        vx(i) = 0;
-        vy(i) = 0;
-    end
+%     n = norm([vx(i) vy(i)]);
+%     if (0 < n && n < speed_threshold)
+%         vx(i) = 0;
+%         vy(i) = 0;
+%     end
 end
 
 % Force of drag
@@ -27,12 +28,18 @@ end
 % rho = density of ball
 % a = cross-section area
 % m = mass of ball
-fx = - 1/2 * c .* rho .* A .* vx .* (vx.^2 + vy.^2);
-fy = - 1/2 * c .* rho .* A .* vy .* (vx.^2 + vy.^2);
+f_rr = c_roll * a_grav .* m; % drag due to rolling resistance
+% fx = - 1/2 * c .* rho .* A .* vx .* (vx.^2 + vy.^2);
+% fy = - 1/2 * c .* rho .* A .* vy .* (vx.^2 + vy.^2);
 
 % Get acceleration
-ax = fx ./ m;
-ay = fy ./ m;
+unit_v_x = vx./(vx.^2 + vy.^2);
+unit_v_y = vy./(vx.^2 + vy.^2);
+ax = -f_rr ./ m .* unit_v_x;
+ay = -f_rr ./ m .* unit_v_y;
+
+ax(isnan(ax)) = 0;
+ay(isnan(ay)) = 0;
 
 T = zeros(length(S),1);
 

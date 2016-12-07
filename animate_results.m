@@ -3,6 +3,12 @@ function res = animate_results(Time, S, axes, radii, dims, K_tot, ...
     
     felt_color = [10, 108, 3]./255;
     ball_colors = {'w', 'k', [224 102 102]/255, [246 178 107]/255, [103 78 167]/255};
+    
+    % Make animation stay on last frame for a bit
+    S = [S; S(end, :)];
+    Time = [Time; Time(end) + 0.25];
+    K_tot = [K_tot; K_tot(end,:)];
+    speeds = [speeds; speeds(end,:)];
 
     % Unpack positions
     ball_count = size(S,2)/4;
@@ -76,7 +82,7 @@ function res = animate_results(Time, S, axes, radii, dims, K_tot, ...
         ylabel('Speed (m/s)');
         plot(Time, speeds);
         plot([Time(t) Time(t)], [0 maxV]);
-        pause(dt/5);
+        pause(dt/2);
     end
     
     function draw_circle(x,y,r,color)

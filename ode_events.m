@@ -2,7 +2,7 @@ function [value, isterminal, direction] = ode_events(~, S)
     
     table_width = 1.17; % m
     table_length = 2.34; % m
-    speed_threshold = 0.1; % m/s (about 1 in/s)
+%     speed_threshold = 0.1; % m/s (about 1 in/s)
     global radii ball_dist_event_dirs
     ball_count = length(S)/4;
     
